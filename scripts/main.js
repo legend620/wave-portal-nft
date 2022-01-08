@@ -3,26 +3,28 @@ const { ethers } = require('hardhat')
 const main = async () => {
   const [owner, randomPerson] = await ethers.getSigners()
   const waveContractFactory = await ethers.getContractFactory('WavePortal')
-  const waveContract = await waveContractFactory.deploy()
+  const waveContract = await waveContractFactory.deploy({
+    value: ethers.utils.parseEther("0.1"),
+  })
   await waveContract.deployed()
 
   console.log('Contract deployed to: ', waveContract.address)
   console.log('Contract deployed by: ', owner.address)
 
-  let waveTxn = await waveContract.wave()
-  await waveTxn.wait()
-  waveTxn = await waveContract.wave()
-  await waveTxn.wait()
+  let contractBalance = await ethers.provider.getBalance(waveContract.address)
+  console.log(`Contract balance: ${ethers.utils.formatEther(contractBalance)}`)
 
-  let ownerBalance = await waveContract.getWalletBalance(owner.address)
-
-  waveTxn = await waveContract.connect(randomPerson).wave()
+  const waveTxn = await waveContract.wave('This is wave #1')
   await waveTxn.wait()
 
-  ownerBalance = await waveContract.getWalletBalance(randomPerson.address)
+  const waveTxn2 = await waveContract.wave('This is wave #2')
+  await waveTxn2.wait()
 
-  waveCount = await waveContract.getTotalWaves()
-
+  contractBalance = await ethers.provider.getBalance(waveContract.address)
+  console.log(`Contract balance after wave: ${ethers.utils.formatEther(contractBalance)}`)
+  
+  let allWaves = await waveContract.getAllWaves()
+  console.log(allWaves)
 }
 
 const run = async () => {
